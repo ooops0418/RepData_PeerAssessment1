@@ -1,0 +1,45 @@
+＃loaddata
+data<-read.csv("activity.csv", sep=',', echo=TRUE)
+
+stepdays<-tapply(steps$steps, steps$date, sum)
+hist(stepdays, main="Steps per day", xla="steps", yla="number of days")
+mean(stepdays, na.rm=T)
+median(stepdays, na.rm=T)
+
+stepmin<-aggregate(steps$steps, list(steps$interval), mean, na.rm=T)
+names(stepmin)<-c("interval", "steps")
+plot(stepmin$interval, stepmin$steps, type="l")
+stepmin[order(stepmin$steps),][288,]$interval
+
+length(which(is.na(steps$steps)))
+#note: R incorrectly thinks the HHMM time is an integer, but we can work with that instead of having to convert.
+steps$hour = floor(steps$interval/100)
+steps$period=floor(steps$hour/3)
+steps$period<-factor(steps$period)
+levels(steps$period)<-c("0-2", "3-5", "6-8", "9-11", "12-14", "15-17", "18-20", "21-23")
+mod<-lm(steps ~ period, data=steps)
+mod
+steps$stepsi<-steps$steps
+steps$stepsi[is.na(steps$steps)]<-predict(mod, newdata=steps[is.na(steps$steps),])
+stepdaysi<-tapply(steps$stepsi, steps$date, sum, na.rm=T)
+stepdaysi
+hist(stepdaysi, main="Steps per day (with imputed data)", xla="steps", yla="number of days", col="#ff99ff")
+mean(stepdaysi, na.rm=T)
+median(stepdaysi, na.rm=T)
+
+# Are there differences in activity patterns between weekdays and weekends?
+data1$date<-as.Date(data1$date)
+data1$day<-weekdays(data1$date)
+data1_weekdays<-data1[(!data1$day %in% c("Saturday","Sunday")),] 
+data1_weekend<-data1[(data1$day %in% c("Saturday","Sunday")),]   
+weekday_steps<-data1_weekdays[,1]
+temp<-matrix(weekday_steps,nrow=288)
+weekday_steps_average<-apply(temp,1,mean)
+weekend_steps<-data1_weekend[,1]
+temp<-matrix(weekend_steps,nrow=288)
+weekend_steps_average<-apply(temp,1,mean)
+par(mfrow=c(2,1))
+plot(data$interval[1:288],weekday_steps_average, type="l",xlab='Intervals',ylab="Number of steps",
+     col='red',lwd=2, main="Weekday")
+plot(data$interval[1:288],weekend_steps_average, type="l", xlab='Intervals',ylab="number of steps",
+     col='blue',lwd=2,main="Weekend")

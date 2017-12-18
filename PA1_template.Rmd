@@ -9,6 +9,7 @@ output:
 ## Loading and preprocessing the data
 
 data<-read.csv("activity.csv", sep=',', echo=TRUE)
+
 stepdays<-tapply(steps$steps, steps$date, sum)
 hist(stepdays, main="Steps per day", xla="steps", yla="number of days")
 

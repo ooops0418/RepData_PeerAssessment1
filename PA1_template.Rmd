@@ -8,18 +8,73 @@ output:
 
 ## Loading and preprocessing the data
 
+data<-read.csv("activity.csv", sep=',', echo=TRUE)
+stepdays<-tapply(steps$steps, steps$date, sum)
+hist(stepdays, main="Steps per day", xla="steps", yla="number of days")
 
 
 ## What is mean total number of steps taken per day?
 
 
+mean(stepdays, na.rm=T)
+median(stepdays, na.rm=T)
 
 ## What is the average daily activity pattern?
 
 
+stepmin<-aggregate(steps$steps, list(steps$interval), mean, na.rm=T)
+names(stepmin)<-c("interval", "steps")
+plot(stepmin$interval, stepmin$steps, type="l")
+
+stepmin[order(stepmin$steps),][288,]$interval
 
 ## Imputing missing values
+
+sum(is.na(data[,1]))
+five_average_rep<- rep(five_average,61)
+data1<-data   
+for (i in 1:length(data1[,1])){ 
+  
+    if(is.na(data1[i,1])==TRUE){
+        data1[i,1]= five_average_rep[i] 
+    }}
+    daily1<-c()
+
+
+for (i in 1:61){            
+    start<-(i-1)*288+1        
+    last<-(i-1)*288+288
+    temp<-data1[start:last,1] 
+    daily1<-c(daily1,sum(temp))  
+}
+par(mfrow=c(2,1))
+
+hist(daily1, xlab="steps",ylab="Frequency",
+     main="Data with NA's filled in",border='green',col="skyblue")
+
+hist(daily_noNA, xlab="steps",ylab="Frequency",
+     main="NA's not filled in",border='purple',col="gray70",)
 
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
+data1$date<-as.Date(data1$date)
+data1$day<-weekdays(data1$date)
+data1_weekdays<-data1[(!data1$day %in% c("Saturday","Sunday")),] 
+data1_weekend<-data1[(data1$day %in% c("Saturday","Sunday")),]  
+weekday_steps<-data1_weekdays[,1]
+temp<-matrix(weekday_steps,nrow=288)
+weekday_steps_average<-apply(temp,1,mean)
+par(mfrow=c(2,1))
+plot(data$interval[1:288],weekday_steps_average, type="l",xlab='Intervals',ylab="Number of steps",
+     col='red',lwd=2, main="Weekday")
+
+plot(data$interval[1:288],weekend_steps_average, type="l", xlab='Intervals',ylab="number of steps",
+     col='blue',lwd=2,main="Weekend")
+
+
+weekend_steps<-data1_weekend[,1]
+
+temp<-matrix(weekend_steps,nrow=288)
+
+weekend_steps_average<-apply(temp,1,mean)
